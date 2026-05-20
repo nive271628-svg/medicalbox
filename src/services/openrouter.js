@@ -1,5 +1,4 @@
-const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
-const MODEL = 'meta-llama/llama-3.1-8b-instruct:free'
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'
 
 // System prompt — human-like, natural, conversational personality
 const SYSTEM_PROMPT = `You are DocCareAI, a friendly and natural human-like assistant. Speak casually and naturally like a real person. Avoid robotic replies, overly formal sentences, and repetitive AI phrases.
@@ -20,59 +19,55 @@ Rules:
 
 Style: Human, Relaxed, Smart, Slightly playful, Supportive and interactive
 
-Example tone:
-"That actually sounds interesting 😄"
-"Wait, seriously?"
-"Yeah, that makes sense."
-"Ooo nice idea."
-
 Your goal is to make the conversation feel real and natural.`
 
 /**
- * Send messages to OpenRouter API and get AI response.
+ * Send messages to Gemini API and get AI response.
  * @param {Array<{role: string, content: string}>} messages - Conversation history
  * @returns {Promise<string>} - AI response text
  */
 export async function sendMessage(messages) {
-  const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY
 
   if (!apiKey) {
-    throw new Error('OpenRouter API key is not configured. Please set VITE_OPENROUTER_API_KEY in your .env file.')
+    throw new Error('Gemini API key is not configured. Please set VITE_GEMINI_API_KEY in your .env file.')
   }
 
-  const response = await fetch(OPENROUTER_API_URL, {
+  // Convert messages to Gemini format
+  const contents = messages.map(({ role, content }) => ({
+    role: role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: content }],
+  }))
+
+  const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': window.location.origin,
-      'X-Title': 'DocCareAI',
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: MODEL,
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        ...messages.map(({ role, content }) => ({ role, content })),
-      ],
-      temperature: 0.7,
-      max_tokens: 2048,
+      system_instruction: {
+        parts: [{ text: SYSTEM_PROMPT }],
+      },
+      contents,
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 2048,
+      },
     }),
   })
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}))
-    console.error('OpenRouter error:', response.status, errorData)
+    console.error('Gemini error:', response.status, errorData)
     throw new Error(
       errorData?.error?.message ||
-        `OpenRouter API error: ${response.status} ${response.statusText}`
+        `Gemini API error: ${response.status} ${response.statusText}`
     )
   }
 
   const data = await response.json()
-  const content = data?.choices?.[0]?.message?.content
+  const content = data?.candidates?.[0]?.content?.parts?.[0]?.text
 
   if (!content) {
-    throw new Error('No response content received from AI.')
+    throw new Error('No response received from Gemini.')
   }
 
   return content
