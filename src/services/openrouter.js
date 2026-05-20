@@ -1,5 +1,5 @@
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
-const MODEL = 'google/gemini-2.5-flash-preview-05-20'
+const MODEL = 'meta-llama/llama-3.1-8b-instruct:free'
 
 // System prompt — human-like, natural, conversational personality
 const SYSTEM_PROMPT = `You are DocCareAI, a friendly and natural human-like assistant. Speak casually and naturally like a real person. Avoid robotic replies, overly formal sentences, and repetitive AI phrases.
