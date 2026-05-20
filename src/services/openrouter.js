@@ -1,5 +1,5 @@
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
-const MODEL = 'google/gemini-2.0-flash-001'
+const MODEL = 'google/gemini-2.5-flash-preview-05-20'
 
 // System prompt — human-like, natural, conversational personality
 const SYSTEM_PROMPT = `You are DocCareAI, a friendly and natural human-like assistant. Speak casually and naturally like a real person. Avoid robotic replies, overly formal sentences, and repetitive AI phrases.
@@ -61,6 +61,7 @@ export async function sendMessage(messages) {
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}))
+    console.error('OpenRouter error:', response.status, errorData)
     throw new Error(
       errorData?.error?.message ||
         `OpenRouter API error: ${response.status} ${response.statusText}`
