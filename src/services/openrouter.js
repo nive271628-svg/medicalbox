@@ -1,4 +1,5 @@
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
+const MODEL = 'llama-3.1-8b-instant'
 
 const SYSTEM_PROMPT = `You are DocCareAI, a friendly and natural human-like assistant. Speak casually and naturally like a real person. Avoid robotic replies, overly formal sentences, and repetitive AI phrases.
 
@@ -21,46 +22,43 @@ Style: Human, Relaxed, Smart, Slightly playful, Supportive and interactive
 Your goal is to make the conversation feel real and natural.`
 
 export async function sendMessage(messages) {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY
+  const apiKey = import.meta.env.VITE_GROQ_API_KEY
 
   if (!apiKey) {
-    throw new Error('Gemini API key is not configured. Please set VITE_GEMINI_API_KEY.')
+    throw new Error('Groq API key is not configured. Please set VITE_GROQ_API_KEY.')
   }
 
-  const contents = messages.map(({ role, content }) => ({
-    role: role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: content }],
-  }))
-
-  const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+  const response = await fetch(GROQ_API_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify({
-      system_instruction: {
-        parts: [{ text: SYSTEM_PROMPT }],
-      },
-      contents,
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 2048,
-      },
+      model: MODEL,
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        ...messages.map(({ role, content }) => ({ role, content })),
+      ],
+      temperature: 0.7,
+      max_tokens: 2048,
     }),
   })
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}))
-    console.error('Gemini error:', response.status, errorData)
+    console.error('Groq error:', response.status, errorData)
     throw new Error(
       errorData?.error?.message ||
-        `Gemini API error: ${response.status} ${response.statusText}`
+        `Groq API error: ${response.status} ${response.statusText}`
     )
   }
 
   const data = await response.json()
-  const content = data?.candidates?.[0]?.content?.parts?.[0]?.text
+  const content = data?.choices?.[0]?.message?.content
 
   if (!content) {
-    throw new Error('No response received from Gemini.')
+    throw new Error('No response received from Groq.')
   }
 
   return content

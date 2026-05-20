@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => {
       'import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID':JSON.stringify(get('VITE_FIREBASE_MESSAGING_SENDER_ID')),
       'import.meta.env.VITE_FIREBASE_APP_ID':             JSON.stringify(get('VITE_FIREBASE_APP_ID')),
       'import.meta.env.VITE_OPENROUTER_API_KEY':          JSON.stringify(get('VITE_OPENROUTER_API_KEY')),
-      'import.meta.env.VITE_GEMINI_API_KEY':              JSON.stringify(get('VITE_GEMINI_API_KEY')),
+      'import.meta.env.VITE_GROQ_API_KEY':               JSON.stringify(get('VITE_GROQ_API_KEY')),
     },
   }
 })
