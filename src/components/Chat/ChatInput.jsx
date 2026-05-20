@@ -1,11 +1,9 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react'
-import { Send, Mic, MicOff } from 'lucide-react'
+import React, { useState, useRef, useEffect } from 'react'
+import { Send } from 'lucide-react'
 
 export default function ChatInput({ onSend, isLoading, disabled }) {
   const [value, setValue] = useState('')
-  const [isListening, setIsListening] = useState(false)
   const textareaRef = useRef(null)
-  const recognitionRef = useRef(null)
 
   // Auto-resize textarea
   useEffect(() => {
@@ -33,67 +31,14 @@ export default function ChatInput({ onSend, isLoading, disabled }) {
     }
   }
 
-  // Voice input — speech-to-text
-  const toggleListening = useCallback(() => {
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition
-    if (!SpeechRecognition) {
-      alert('Speech recognition is not supported in your browser.')
-      return
-    }
-
-    if (isListening) {
-      recognitionRef.current?.stop()
-      setIsListening(false)
-      return
-    }
-
-    const recognition = new SpeechRecognition()
-    recognition.lang = 'en-US'
-    recognition.interimResults = false
-    recognition.maxAlternatives = 1
-
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript
-      setValue((prev) => (prev ? prev + ' ' + transcript : transcript))
-    }
-
-    recognition.onerror = () => setIsListening(false)
-    recognition.onend = () => setIsListening(false)
-
-    recognitionRef.current = recognition
-    recognition.start()
-    setIsListening(true)
-  }, [isListening])
-
   const canSend = value.trim().length > 0 && !isLoading && !disabled
 
   return (
     <div className="border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 pt-3 pb-4 pb-[max(1rem,env(safe-area-inset-bottom))] transition-colors duration-200">
-      {/* Input row */}
       <form
         onSubmit={handleSubmit}
         className="flex items-end gap-2 max-w-3xl mx-auto"
       >
-        {/* Mic button — left of textarea */}
-        <button
-          type="button"
-          onClick={toggleListening}
-          disabled={isLoading || disabled}
-          className={`
-            flex-shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center
-            transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500
-            ${isListening
-              ? 'bg-red-500 text-white animate-pulse'
-              : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'
-            }
-            disabled:opacity-40 disabled:cursor-not-allowed
-          `}
-          aria-label={isListening ? 'Stop listening' : 'Voice input'}
-        >
-          {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-        </button>
-
         {/* Textarea */}
         <div className="flex-1">
           <textarea
@@ -102,9 +47,7 @@ export default function ChatInput({ onSend, isLoading, disabled }) {
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={
-              isListening
-                ? 'Listening...'
-                : isLoading
+              isLoading
                 ? 'DocCareAI is responding...'
                 : 'Ask DocCareAI anything...'
             }
