@@ -9,6 +9,9 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    build: {
+      chunkSizeWarningLimit: 1000,
+    },
     define: {
       'import.meta.env.VITE_FIREBASE_API_KEY':            JSON.stringify(get('VITE_FIREBASE_API_KEY')),
       'import.meta.env.VITE_FIREBASE_AUTH_DOMAIN':        JSON.stringify(get('VITE_FIREBASE_AUTH_DOMAIN')),
