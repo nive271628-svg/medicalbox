@@ -5,7 +5,7 @@ import ChatInput from './ChatInput'
 
 function TypingIndicator() {
   return (
-    <div className="flex gap-3">
+    <div className="flex gap-2 sm:gap-3">
       <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0 mt-1">
         <Bot className="w-4 h-4 text-slate-600 dark:text-slate-300" />
       </div>
@@ -22,25 +22,25 @@ function TypingIndicator() {
 
 function EmptyState({ onNewChat }) {
   const suggestions = [
-    'Explain quantum computing in simple terms',
-    'Write a Python function to sort a list',
-    'What are the best practices for React?',
-    'Help me plan a healthy weekly meal prep',
+    'What are symptoms of high blood pressure?',
+    'How do I manage diabetes with diet?',
+    'Explain common cold vs flu differences',
+    'What vitamins should I take daily?',
   ]
 
   return (
-    <div className="flex flex-col items-center justify-center h-full px-4 py-12 text-center">
+    <div className="flex flex-col items-center justify-center h-full px-4 py-10 text-center">
       <div className="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center mb-4 shadow-lg">
         <Sparkles className="w-8 h-8 text-white" />
       </div>
-      <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-        How can I help you today?
+      <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mb-2">
+        How can DocCareAI help you?
       </h2>
-      <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-md">
-        Start a conversation with your AI assistant. Ask anything — I&apos;m here to help.
+      <p className="text-slate-500 dark:text-slate-400 mb-6 max-w-sm text-sm sm:text-base">
+        Ask any health or medical question and get a direct, clear answer.
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-xl">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-xl">
         {suggestions.map((suggestion) => (
           <button
             key={suggestion}
@@ -86,7 +86,7 @@ export default function ChatWindow({ messages, isLoading, error, onSend, onClear
         {isEmpty && !isLoading ? (
           <EmptyState onNewChat={onSend} />
         ) : (
-          <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+          <div className="w-full max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
             {messages.map((message, index) => (
               <MessageBubble key={index} message={message} />
             ))}
@@ -95,7 +95,7 @@ export default function ChatWindow({ messages, isLoading, error, onSend, onClear
 
             {/* Error message */}
             {error && (
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-2 sm:gap-3">
                 <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0 mt-1">
                   <Bot className="w-4 h-4 text-red-500" />
                 </div>
@@ -119,7 +119,11 @@ export default function ChatWindow({ messages, isLoading, error, onSend, onClear
       </div>
 
       {/* Input */}
-      <ChatInput onSend={onSend} isLoading={isLoading} disabled={false} />
+      <ChatInput
+        onSend={onSend}
+        isLoading={isLoading}
+        disabled={false}
+      />
     </div>
   )
 }

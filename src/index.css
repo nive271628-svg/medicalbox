@@ -32,7 +32,11 @@ html,
 body,
 #root {
   height: 100%;
+  /* Use dynamic viewport height so mobile browser chrome doesn't cut content */
+  min-height: 100dvh;
   width: 100%;
+  /* Prevent horizontal scroll on mobile */
+  overflow-x: hidden;
 }
 
 body {
@@ -41,6 +45,11 @@ body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
   transition: background-color 0.2s ease, color 0.2s ease;
+  /* Prevent text size adjustment on orientation change */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Smooth momentum scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Scrollbar styling */

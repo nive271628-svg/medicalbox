@@ -39,8 +39,8 @@ export default function Navbar({ onMenuToggle }) {
           <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
             <Bot className="w-5 h-5 text-white" />
           </div>
-          <span className="font-semibold text-slate-900 dark:text-white hidden sm:block">
-            AI Chat Assistant
+          <span className="font-semibold text-slate-900 dark:text-white text-sm sm:text-base">
+            DocCareAI
           </span>
         </div>
       </div>

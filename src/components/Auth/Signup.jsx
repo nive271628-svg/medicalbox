@@ -16,137 +16,90 @@ export default function Signup() {
 
   async function handleSubmit(e) {
     e.preventDefault()
-
     if (!displayName || !email || !password || !confirmPassword) {
-      setError('Please fill in all fields.')
-      return
+      setError('Please fill in all fields.'); return
     }
-
-    if (password !== confirmPassword) {
-      setError('Passwords do not match.')
-      return
-    }
-
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters.')
-      return
-    }
-
+    if (password !== confirmPassword) { setError('Passwords do not match.'); return }
+    if (password.length < 6) { setError('Password must be at least 6 characters.'); return }
     try {
-      setError('')
-      setLoading(true)
+      setError(''); setLoading(true)
       await signup(email, password, displayName)
       navigate('/chat')
     } catch (err) {
       setError(getFirebaseErrorMessage(err.code))
-    } finally {
-      setLoading(false)
-    }
+    } finally { setLoading(false) }
   }
 
   function getFirebaseErrorMessage(code) {
     switch (code) {
-      case 'auth/email-already-in-use':
-        return 'An account with this email already exists.'
-      case 'auth/invalid-email':
-        return 'Invalid email address.'
-      case 'auth/weak-password':
-        return 'Password is too weak. Use at least 6 characters.'
-      default:
-        return 'Failed to create account. Please try again.'
+      case 'auth/email-already-in-use': return 'An account with this email already exists.'
+      case 'auth/invalid-email':        return 'Invalid email address.'
+      case 'auth/weak-password':        return 'Use at least 6 characters.'
+      default:                          return 'Failed to create account. Please try again.'
     }
   }
 
+  const inputClass = "w-full pl-10 pr-4 py-3 sm:py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 px-4 transition-colors duration-200">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 px-4 py-8 transition-colors duration-200">
+      <div className="w-full max-w-sm sm:max-w-md">
+
         {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-600 mb-4 shadow-lg">
-            <Bot className="w-9 h-9 text-white" />
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-blue-600 mb-3 shadow-lg">
+            <Bot className="w-7 h-7 sm:w-9 sm:h-9 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Create Account</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-2">Start chatting with AI today</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">DocCareAI</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm sm:text-base">Create your account</p>
         </div>
 
         {/* Card */}
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 border border-slate-200 dark:border-slate-700">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl px-5 py-6 sm:p-8 border border-slate-200 dark:border-slate-700">
           {error && (
             <div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
             {/* Name */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                Full name
-              </label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Full name</label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <input
-                  type="text"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="John Doe"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                  required
-                />
+                <input type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="John Doe" autoComplete="name" className={inputClass} required />
               </div>
             </div>
 
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                Email address
-              </label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Email address</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                  required
-                />
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com" autoComplete="email" className={inputClass} required />
               </div>
             </div>
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                Password
-              </label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Min. 6 characters"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                  required
-                />
+                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Min. 6 characters" autoComplete="new-password" className={inputClass} required />
               </div>
             </div>
 
             {/* Confirm Password */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                Confirm password
-              </label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Confirm password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                  required
-                />
+                <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••" autoComplete="new-password" className={inputClass} required />
               </div>
             </div>
 
@@ -154,24 +107,19 @@ export default function Signup() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="w-full flex items-center justify-center gap-2 py-3 sm:py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-blue-400 text-white font-medium text-base sm:text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
-              {loading ? (
-                <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <UserPlus className="w-4 h-4" />
-              )}
+              {loading
+                ? <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                : <UserPlus className="w-4 h-4" />
+              }
               {loading ? 'Creating account...' : 'Create Account'}
             </button>
           </form>
 
-          {/* Link to login */}
-          <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-6">
+          <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-5">
             Already have an account?{' '}
-            <Link
-              to="/login"
-              className="text-blue-600 dark:text-blue-400 font-medium hover:underline"
-            >
+            <Link to="/login" className="text-blue-600 dark:text-blue-400 font-medium hover:underline">
               Sign in
             </Link>
           </p>

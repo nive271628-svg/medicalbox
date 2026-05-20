@@ -3,10 +3,4 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  preview: {
-    allowedHosts: ['ai-chat-assistant-4uvx.onrender.com', 'all'],
-  },
-  server: {
-    allowedHosts: ['all'],
-  },
 })

@@ -41,10 +41,10 @@ function ChatPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-white dark:bg-slate-900 transition-colors duration-200">
+    <div className="flex flex-col h-[100dvh] bg-white dark:bg-slate-900 transition-colors duration-200">
       <Navbar onMenuToggle={() => setSidebarOpen((prev) => !prev)} />
 
-      <div className="flex flex-1 min-h-0">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         <ChatSidebar
           sessions={sessions}
           activeSessionId={activeSessionId}
@@ -55,7 +55,7 @@ function ChatPage() {
           onClose={() => setSidebarOpen(false)}
         />
 
-        <main className="flex flex-1 min-w-0">
+        <main className="flex flex-1 min-w-0 overflow-hidden">
           <ChatWindow
             messages={messages}
             isLoading={isLoading}

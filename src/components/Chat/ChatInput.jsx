@@ -1,16 +1,18 @@
-import React, { useState, useRef, useEffect } from 'react'
-import { Send } from 'lucide-react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
+import { Send, Mic, MicOff } from 'lucide-react'
 
 export default function ChatInput({ onSend, isLoading, disabled }) {
   const [value, setValue] = useState('')
+  const [isListening, setIsListening] = useState(false)
   const textareaRef = useRef(null)
+  const recognitionRef = useRef(null)
 
   // Auto-resize textarea
   useEffect(() => {
     const textarea = textareaRef.current
     if (!textarea) return
     textarea.style.height = 'auto'
-    textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px'
+    textarea.style.height = Math.min(textarea.scrollHeight, 160) + 'px'
   }, [value])
 
   function handleSubmit(e) {
@@ -19,7 +21,6 @@ export default function ChatInput({ onSend, isLoading, disabled }) {
     if (!trimmed || isLoading || disabled) return
     onSend(trimmed)
     setValue('')
-    // Reset height
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto'
     }
@@ -32,46 +33,107 @@ export default function ChatInput({ onSend, isLoading, disabled }) {
     }
   }
 
+  // Voice input — speech-to-text
+  const toggleListening = useCallback(() => {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition
+    if (!SpeechRecognition) {
+      alert('Speech recognition is not supported in your browser.')
+      return
+    }
+
+    if (isListening) {
+      recognitionRef.current?.stop()
+      setIsListening(false)
+      return
+    }
+
+    const recognition = new SpeechRecognition()
+    recognition.lang = 'en-US'
+    recognition.interimResults = false
+    recognition.maxAlternatives = 1
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript
+      setValue((prev) => (prev ? prev + ' ' + transcript : transcript))
+    }
+
+    recognition.onerror = () => setIsListening(false)
+    recognition.onend = () => setIsListening(false)
+
+    recognitionRef.current = recognition
+    recognition.start()
+    setIsListening(true)
+  }, [isListening])
+
   const canSend = value.trim().length > 0 && !isLoading && !disabled
 
   return (
-    <div className="border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 transition-colors duration-200">
+    <div className="border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 pt-3 pb-4 pb-[max(1rem,env(safe-area-inset-bottom))] transition-colors duration-200">
+      {/* Input row */}
       <form
         onSubmit={handleSubmit}
-        className="flex items-end gap-3 max-w-3xl mx-auto"
+        className="flex items-end gap-2 max-w-3xl mx-auto"
       >
-        <div className="flex-1 relative">
+        {/* Mic button — left of textarea */}
+        <button
+          type="button"
+          onClick={toggleListening}
+          disabled={isLoading || disabled}
+          className={`
+            flex-shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center
+            transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500
+            ${isListening
+              ? 'bg-red-500 text-white animate-pulse'
+              : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'
+            }
+            disabled:opacity-40 disabled:cursor-not-allowed
+          `}
+          aria-label={isListening ? 'Stop listening' : 'Voice input'}
+        >
+          {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+        </button>
+
+        {/* Textarea */}
+        <div className="flex-1">
           <textarea
             ref={textareaRef}
             value={value}
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={isLoading ? 'AI is responding...' : 'Message AI Assistant... (Enter to send, Shift+Enter for new line)'}
+            placeholder={
+              isListening
+                ? 'Listening...'
+                : isLoading
+                ? 'DocCareAI is responding...'
+                : 'Ask DocCareAI anything...'
+            }
             disabled={isLoading || disabled}
             rows={1}
             className="
-              w-full resize-none rounded-xl border border-slate-300 dark:border-slate-600
+              w-full resize-none rounded-2xl border border-slate-300 dark:border-slate-600
               bg-slate-50 dark:bg-slate-700
               text-slate-900 dark:text-white
               placeholder-slate-400 dark:placeholder-slate-500
-              px-4 py-3 pr-12
+              px-4 py-3
               text-sm leading-relaxed
               focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
               disabled:opacity-60 disabled:cursor-not-allowed
               transition-colors
-              max-h-[200px] overflow-y-auto
+              max-h-[160px] overflow-y-auto
             "
           />
         </div>
 
+        {/* Send button */}
         <button
           type="submit"
           disabled={!canSend}
           className="
-            flex-shrink-0 w-10 h-10 rounded-xl
+            flex-shrink-0 w-11 h-11 rounded-2xl
             flex items-center justify-center
             bg-blue-600 hover:bg-blue-700
-            disabled:bg-slate-300 dark:disabled:bg-slate-600
+            disabled:bg-slate-200 dark:disabled:bg-slate-700
             text-white disabled:text-slate-400 dark:disabled:text-slate-500
             transition-colors
             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
@@ -87,7 +149,7 @@ export default function ChatInput({ onSend, isLoading, disabled }) {
       </form>
 
       <p className="text-center text-xs text-slate-400 dark:text-slate-500 mt-2">
-        AI can make mistakes. Consider checking important information.
+        DocCareAI can make mistakes. Always consult a medical professional.
       </p>
     </div>
   )

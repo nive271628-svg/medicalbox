@@ -54,7 +54,7 @@ export default function ChatSidebar({
       <aside
         className={`
           fixed md:relative inset-y-0 left-0 z-30 md:z-auto
-          w-72 flex flex-col
+          w-[280px] sm:w-72 flex flex-col
           bg-slate-50 dark:bg-slate-900
           border-r border-slate-200 dark:border-slate-700
           transition-transform duration-300 ease-in-out
