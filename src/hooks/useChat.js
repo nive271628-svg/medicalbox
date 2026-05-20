@@ -159,7 +159,8 @@ export function useChat() {
       } catch (err) {
         console.error('Error sending message:', err)
         setError(err.message || 'Failed to get AI response. Please try again.')
-        setMessages(messages)
+        // Keep the user message visible — do NOT revert
+        setMessages(updatedMessages)
       } finally {
         setIsLoading(false)
       }

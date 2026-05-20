@@ -74,7 +74,7 @@ export default function ChatWindow({ messages, isLoading, error, onSend, onClear
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isLoading])
 
-  const isEmpty = messages.length === 0
+  const isEmpty = messages.length === 0 && !error
 
   return (
     <div className="flex flex-col flex-1 min-h-0 bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
