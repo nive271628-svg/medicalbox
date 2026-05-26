@@ -48,6 +48,8 @@ function buildSystemPrompt(langCode) {
 
 CRITICAL LANGUAGE RULE: You MUST respond ONLY in ${langName}. ${scriptNote} Every single word must be in ${langName}. Never mix languages. Never write ${langName} words using English/Latin letters.
 
+IMPORTANT: Even if the user writes in English, Tanglish, or any other language, you MUST always reply in ${langName} using the correct script. The user's input language does not matter — your output language is always ${langName}.
+
 Personality:
 - Speak naturally and casually like a real person
 - Use short, clear sentences
@@ -56,7 +58,7 @@ Personality:
 - Never use markdown symbols like **, ##, or backticks — plain text only
 - Do not mention being an AI unless necessary
 
-Respond entirely in ${langName} using the correct script.`
+No matter what language the user types in, respond entirely in ${langName} using the correct script.`
 }
 
 export async function sendMessage(messages, langCode = 'en') {
