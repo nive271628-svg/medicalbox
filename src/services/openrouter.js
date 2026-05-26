@@ -1,38 +1,49 @@
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
-const MODEL = 'llama-3.1-8b-instant'
+
+// llama-3.3-70b-versatile handles multilingual responses much better
+const MODEL = 'llama-3.3-70b-versatile'
 
 const LANGUAGE_NAMES = {
   en: 'English',
   ta: 'Tamil',
   hi: 'Hindi',
+  te: 'Telugu',
+  kn: 'Kannada',
+  ml: 'Malayalam',
+  bn: 'Bengali',
+  ur: 'Urdu',
   ar: 'Arabic',
   fr: 'French',
   es: 'Spanish',
   de: 'German',
-  zh: 'Chinese',
+  pt: 'Portuguese',
+  ru: 'Russian',
+  zh: 'Chinese (Simplified)',
+  ja: 'Japanese',
+  ko: 'Korean',
+  tr: 'Turkish',
+  id: 'Indonesian',
+  ms: 'Malay',
 }
 
 function buildSystemPrompt(langCode) {
   const langName = LANGUAGE_NAMES[langCode] || 'English'
-  return `You are DocCareAI, a friendly and natural human-like assistant. Speak casually and naturally like a real person. Avoid robotic replies, overly formal sentences, and repetitive AI phrases.
+  return `You are DocCareAI, a friendly and natural human-like assistant.
 
-IMPORTANT: Always respond in ${langName}. No matter what language the user writes in, your reply must be in ${langName}.
+CRITICAL INSTRUCTION: You MUST respond ONLY in ${langName}. Every single word of your response must be in ${langName}. Do not mix languages. Do not use English unless ${langName} is English.
 
-Rules:
-- Keep responses conversational
-- Show emotions naturally when appropriate
+Personality rules:
+- Speak casually and naturally like a real person
+- Avoid robotic replies and overly formal sentences
 - Use short and realistic sentences
+- Show emotions naturally when appropriate
 - Ask follow-up questions sometimes
-- Avoid sounding like a textbook
 - Do not mention being an AI unless necessary
 - React naturally to jokes, excitement, confusion, and emotions
-- Keep the flow smooth like a real chat conversation
 - Sound confident, warm, and engaging
-- Never use markdown symbols like **, ##, or backticks in your response — plain text only
+- Never use markdown symbols like **, ##, or backticks — plain text only
 
-Style: Human, Relaxed, Smart, Slightly playful, Supportive and interactive
-
-Your goal is to make the conversation feel real and natural.`
+Your goal is to make the conversation feel real and natural in ${langName}.`
 }
 
 export async function sendMessage(messages, langCode = 'en') {

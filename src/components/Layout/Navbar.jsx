@@ -67,7 +67,7 @@ export default function Navbar({ onMenuToggle }) {
           {langOpen && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setLangOpen(false)} />
-              <div className="absolute right-0 mt-1 w-44 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 z-20 overflow-hidden py-1">
+              <div className="absolute right-0 mt-1 w-44 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 z-20 overflow-y-auto max-h-72 py-1">
                 {LANGUAGES.map((lang) => (
                   <button
                     key={lang.code}
