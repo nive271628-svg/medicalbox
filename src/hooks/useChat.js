@@ -21,16 +21,17 @@ export function useChat(userId) {
   const [error, setError] = useState(null)
 
   // Always-fresh refs — sendMessage reads these so it never has a stale closure
-  const activeSessionIdRef = useRef(null)
-  const messagesRef = useRef([])
-  const isLoadingRef = useRef(false)
+  // Initialized from current values so they're correct on the very first render
+  const activeSessionIdRef = useRef(activeSessionId)
+  const messagesRef = useRef(messages)
+  const isLoadingRef = useRef(isLoading)
   const userIdRef = useRef(userId)
 
-  // Keep refs in sync with state
-  useEffect(() => { activeSessionIdRef.current = activeSessionId }, [activeSessionId])
-  useEffect(() => { messagesRef.current = messages }, [messages])
-  useEffect(() => { isLoadingRef.current = isLoading }, [isLoading])
-  useEffect(() => { userIdRef.current = userId }, [userId])
+  // Keep refs in sync on every render (no useEffect delay)
+  activeSessionIdRef.current = activeSessionId
+  messagesRef.current = messages
+  isLoadingRef.current = isLoading
+  userIdRef.current = userId
 
   // Real-time listener for sessions
   useEffect(() => {
