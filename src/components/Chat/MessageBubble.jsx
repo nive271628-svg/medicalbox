@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react'
-import { Bot, User, Volume2, VolumeX, Copy, Check } from 'lucide-react'
+import { Bot, User, Volume2, VolumeX, Copy, Check, Sparkles } from 'lucide-react'
 
 function formatTime(timestamp) {
   if (!timestamp) return ''
@@ -214,8 +214,8 @@ export default function MessageBubble({ message }) {
   return (
     <div className={`flex gap-2 sm:gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'} group`}>
       <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1
-        ${isUser ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>
-        {isUser ? <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
+        ${isUser ? 'bg-blue-600 text-white' : 'bg-blue-600 text-white'}`}>
+        {isUser ? <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
       </div>
 
       <div className={`flex flex-col max-w-[82%] sm:max-w-[75%] ${isUser ? 'items-end' : 'items-start'}`}>
