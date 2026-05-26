@@ -108,37 +108,68 @@ function MessageActions({ content }) {
       return
     }
 
-    const speak = () => {
+    if (!window.speechSynthesis) {
+      alert('Text-to-speech is not supported in your browser.')
+      return
+    }
+
+    const doSpeak = (voices) => {
+      window.speechSynthesis.cancel()
+
       const locale = detectLang(plainText)
-      const voices = window.speechSynthesis.getVoices()
       const utterance = new SpeechSynthesisUtterance(plainText)
       utterance.lang = locale
-      utterance.rate = 0.92
-      utterance.pitch = 0.9
+      utterance.rate = 0.9
+      utterance.pitch = 1
       utterance.volume = 1
 
-      // Find best matching voice for detected language
       const voice =
         voices.find((v) => v.lang === locale) ||
         voices.find((v) => v.lang.startsWith(locale.split('-')[0])) ||
+        voices.find((v) => v.lang.startsWith('en')) ||
         null
       if (voice) utterance.voice = voice
 
+      utterance.onstart = () => setIsSpeaking(true)
       utterance.onend = () => setIsSpeaking(false)
-      utterance.onerror = () => setIsSpeaking(false)
-      window.speechSynthesis.cancel()
-      window.speechSynthesis.speak(utterance)
+      utterance.onerror = (e) => {
+        console.error('TTS error:', e)
+        setIsSpeaking(false)
+      }
+
+      // Chrome bug fix: keep speech alive with a periodic resume
+      const resumeTimer = setInterval(() => {
+        if (window.speechSynthesis.speaking) {
+          window.speechSynthesis.pause()
+          window.speechSynthesis.resume()
+        } else {
+          clearInterval(resumeTimer)
+        }
+      }, 10000)
+
+      utterance.onend = () => {
+        clearInterval(resumeTimer)
+        setIsSpeaking(false)
+      }
+      utterance.onerror = () => {
+        clearInterval(resumeTimer)
+        setIsSpeaking(false)
+      }
+
       setIsSpeaking(true)
+      window.speechSynthesis.speak(utterance)
     }
 
     const voices = window.speechSynthesis.getVoices()
     if (voices.length > 0) {
-      speak()
+      doSpeak(voices)
     } else {
       window.speechSynthesis.onvoiceschanged = () => {
         window.speechSynthesis.onvoiceschanged = null
-        speak()
+        doSpeak(window.speechSynthesis.getVoices())
       }
+      // Trigger voice load
+      window.speechSynthesis.getVoices()
     }
   }, [isSpeaking, plainText])
 
