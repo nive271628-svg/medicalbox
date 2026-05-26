@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import {
   collection,
   doc,
@@ -20,7 +20,19 @@ export function useChat(userId) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  // Real-time listener for sessions from Firestore
+  // Always-fresh refs — sendMessage reads these so it never has a stale closure
+  const activeSessionIdRef = useRef(null)
+  const messagesRef = useRef([])
+  const isLoadingRef = useRef(false)
+  const userIdRef = useRef(userId)
+
+  // Keep refs in sync with state
+  useEffect(() => { activeSessionIdRef.current = activeSessionId }, [activeSessionId])
+  useEffect(() => { messagesRef.current = messages }, [messages])
+  useEffect(() => { isLoadingRef.current = isLoading }, [isLoading])
+  useEffect(() => { userIdRef.current = userId }, [userId])
+
+  // Real-time listener for sessions
   useEffect(() => {
     if (!userId) {
       setSessions([])
@@ -41,9 +53,10 @@ export function useChat(userId) {
   }, [userId])
 
   const createNewSession = useCallback(async () => {
-    if (!userId) return null
+    const uid = userIdRef.current
+    if (!uid) return null
 
-    const sessionsRef = collection(db, 'users', userId, 'sessions')
+    const sessionsRef = collection(db, 'users', uid, 'sessions')
     const docRef = await addDoc(sessionsRef, {
       title: 'New Chat',
       messages: [],
@@ -55,7 +68,7 @@ export function useChat(userId) {
     setMessages([])
     setError(null)
     return docRef.id
-  }, [userId])
+  }, [])
 
   const selectSession = useCallback((sessionId) => {
     setSessions((prev) => {
@@ -68,8 +81,9 @@ export function useChat(userId) {
   }, [])
 
   const deleteSession = useCallback(async (sessionId) => {
-    if (!userId) return
-    await deleteDoc(doc(db, 'users', userId, 'sessions', sessionId))
+    const uid = userIdRef.current
+    if (!uid) return
+    await deleteDoc(doc(db, 'users', uid, 'sessions', sessionId))
     setActiveSessionId((prev) => {
       if (prev === sessionId) {
         setMessages([])
@@ -77,76 +91,81 @@ export function useChat(userId) {
       }
       return prev
     })
-  }, [userId])
+  }, [])
 
-  const sendMessage = useCallback(
-    async (content) => {
-      if (!content.trim() || isLoading || !userId) return
+  // sendMessage has NO state in deps — reads everything from refs
+  const sendMessage = useCallback(async (content) => {
+    const uid = userIdRef.current
+    const currentMessages = messagesRef.current
+    const currentLoading = isLoadingRef.current
+    let sessionId = activeSessionIdRef.current
 
-      setError(null)
+    if (!content.trim() || currentLoading || !uid) return
 
-      let sessionId = activeSessionId
+    setError(null)
 
-      // Create a new session in Firestore if none is active
-      if (!sessionId) {
-        const sessionsRef = collection(db, 'users', userId, 'sessions')
-        const docRef = await addDoc(sessionsRef, {
-          title: content.trim().slice(0, 50) + (content.trim().length > 50 ? '...' : ''),
-          messages: [],
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        })
-        sessionId = docRef.id
-        setActiveSessionId(sessionId)
-      }
+    // Create a new session if none is active
+    if (!sessionId) {
+      const sessionsRef = collection(db, 'users', uid, 'sessions')
+      const docRef = await addDoc(sessionsRef, {
+        title: content.trim().slice(0, 50) + (content.trim().length > 50 ? '...' : ''),
+        messages: [],
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      })
+      sessionId = docRef.id
+      setActiveSessionId(sessionId)
+      activeSessionIdRef.current = sessionId
+    }
 
-      const userMessage = {
-        role: 'user',
-        content: content.trim(),
+    const userMessage = {
+      role: 'user',
+      content: content.trim(),
+      timestamp: new Date().toISOString(),
+    }
+
+    const updatedMessages = [...currentMessages, userMessage]
+    setMessages(updatedMessages)
+    messagesRef.current = updatedMessages
+    setIsLoading(true)
+    isLoadingRef.current = true
+
+    // Update title only for existing sessions on their first message
+    if (currentMessages.length === 0 && activeSessionIdRef.current) {
+      await updateDoc(doc(db, 'users', uid, 'sessions', sessionId), {
+        title: content.trim().slice(0, 50) + (content.trim().length > 50 ? '...' : ''),
+        updatedAt: serverTimestamp(),
+      })
+    }
+
+    try {
+      const aiMessages = updatedMessages.map(({ role, content: c }) => ({ role, content: c }))
+      const aiResponse = await sendToAI(aiMessages)
+
+      const assistantMessage = {
+        role: 'assistant',
+        content: aiResponse,
         timestamp: new Date().toISOString(),
       }
 
-      const updatedMessages = [...messages, userMessage]
+      const finalMessages = [...updatedMessages, assistantMessage]
+      setMessages(finalMessages)
+      messagesRef.current = finalMessages
+
+      await updateDoc(doc(db, 'users', uid, 'sessions', sessionId), {
+        messages: finalMessages,
+        updatedAt: serverTimestamp(),
+      })
+    } catch (err) {
+      console.error('Error sending message:', err)
+      setError(err.message || 'Failed to get AI response. Please try again.')
       setMessages(updatedMessages)
-      setIsLoading(true)
-
-      // Update title only for existing sessions on their first message
-      // (new sessions already have the title set during addDoc above)
-      if (messages.length === 0 && activeSessionId) {
-        await updateDoc(doc(db, 'users', userId, 'sessions', sessionId), {
-          title: content.trim().slice(0, 50) + (content.trim().length > 50 ? '...' : ''),
-          updatedAt: serverTimestamp(),
-        })
-      }
-
-      try {
-        const aiMessages = updatedMessages.map(({ role, content: c }) => ({ role, content: c }))
-        const aiResponse = await sendToAI(aiMessages)
-
-        const assistantMessage = {
-          role: 'assistant',
-          content: aiResponse,
-          timestamp: new Date().toISOString(),
-        }
-
-        const finalMessages = [...updatedMessages, assistantMessage]
-        setMessages(finalMessages)
-
-        // Persist messages to Firestore
-        await updateDoc(doc(db, 'users', userId, 'sessions', sessionId), {
-          messages: finalMessages,
-          updatedAt: serverTimestamp(),
-        })
-      } catch (err) {
-        console.error('Error sending message:', err)
-        setError(err.message || 'Failed to get AI response. Please try again.')
-        setMessages(updatedMessages)
-      } finally {
-        setIsLoading(false)
-      }
-    },
-    [userId, activeSessionId, messages, isLoading]
-  )
+      messagesRef.current = updatedMessages
+    } finally {
+      setIsLoading(false)
+      isLoadingRef.current = false
+    }
+  }, []) // stable — never recreated
 
   return {
     sessions,
