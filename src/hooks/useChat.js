@@ -101,7 +101,13 @@ export function useChat(userId) {
     const currentLoading = isLoadingRef.current
     let sessionId = activeSessionIdRef.current
 
-    if (!content.trim() || currentLoading || !uid) return
+    if (!content.trim()) return
+    if (currentLoading) return
+    if (!uid) {
+      console.error('[useChat] sendMessage called but uid is null — user not authenticated?')
+      setError('Session error — please refresh the page and sign in again.')
+      return
+    }
 
     setError(null)
 

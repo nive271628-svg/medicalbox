@@ -25,6 +25,8 @@ function PublicRoute({ children }) {
 
 function ChatPage() {
   const { currentUser } = useAuth()
+  const uid = currentUser?.uid ?? null
+
   const {
     sessions,
     activeSessionId,
@@ -36,7 +38,7 @@ function ChatPage() {
     deleteSession,
     sendMessage,
     setError,
-  } = useChat(currentUser?.uid)
+  } = useChat(uid)
 
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
