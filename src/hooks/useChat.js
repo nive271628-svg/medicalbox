@@ -1,118 +1,75 @@
-import { useState, useEffect, useCallback } from 'react'
-import {
-  collection,
-  doc,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  getDoc,
-  onSnapshot,
-  orderBy,
-  query,
-  serverTimestamp,
-} from 'firebase/firestore'
-import { db } from '../services/firebase'
+import { useState, useCallback } from 'react'
 import { sendMessage as sendToAI } from '../services/openrouter'
-import { useAuth } from '../context/AuthContext'
+
+function generateId() {
+  return Math.random().toString(36).slice(2) + Date.now().toString(36)
+}
 
 export function useChat() {
-  const { currentUser } = useAuth()
   const [sessions, setSessions] = useState([])
   const [activeSessionId, setActiveSessionId] = useState(null)
   const [messages, setMessages] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  // Subscribe to chat sessions for the current user
-  useEffect(() => {
-    if (!currentUser) {
-      setSessions([])
-      setActiveSessionId(null)
-      setMessages([])
-      return
-    }
-
-    const chatsRef = collection(db, 'users', currentUser.uid, 'chats')
-    const q = query(chatsRef, orderBy('updatedAt', 'desc'))
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const sessionList = snapshot.docs.map((docSnap) => ({
-        id: docSnap.id,
-        ...docSnap.data(),
-      }))
-      setSessions(sessionList)
-    })
-
-    return unsubscribe
-  }, [currentUser])
-
-  // Load messages when active session changes — fetch directly from Firestore
-  useEffect(() => {
-    if (!activeSessionId || !currentUser) {
-      setMessages([])
-      return
-    }
-
-    let cancelled = false
-
-    const chatRef = doc(db, 'users', currentUser.uid, 'chats', activeSessionId)
-    getDoc(chatRef).then((snap) => {
-      if (!cancelled && snap.exists()) {
-        setMessages(snap.data().messages || [])
-      }
-    })
-
-    return () => { cancelled = true }
-  }, [activeSessionId, currentUser])
-
-  const createNewSession = useCallback(async () => {
-    if (!currentUser) return null
-
-    const chatsRef = collection(db, 'users', currentUser.uid, 'chats')
-    const newSession = await addDoc(chatsRef, {
+  const createNewSession = useCallback(() => {
+    const id = generateId()
+    const newSession = {
+      id,
       title: 'New Chat',
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       messages: [],
-    })
-
-    setActiveSessionId(newSession.id)
+    }
+    setSessions((prev) => [newSession, ...prev])
+    setActiveSessionId(id)
     setMessages([])
-    return newSession.id
-  }, [currentUser])
+    setError(null)
+    return id
+  }, [])
 
   const selectSession = useCallback((sessionId) => {
+    setSessions((prev) => {
+      const session = prev.find((s) => s.id === sessionId)
+      if (session) setMessages(session.messages || [])
+      return prev
+    })
     setActiveSessionId(sessionId)
-    setMessages([])
     setError(null)
   }, [])
 
-  const deleteSession = useCallback(
-    async (sessionId) => {
-      if (!currentUser) return
-
-      const chatRef = doc(db, 'users', currentUser.uid, 'chats', sessionId)
-      await deleteDoc(chatRef)
-
-      if (activeSessionId === sessionId) {
-        setActiveSessionId(null)
+  const deleteSession = useCallback((sessionId) => {
+    setSessions((prev) => prev.filter((s) => s.id !== sessionId))
+    setActiveSessionId((prev) => {
+      if (prev === sessionId) {
         setMessages([])
+        return null
       }
-    },
-    [currentUser, activeSessionId]
-  )
+      return prev
+    })
+  }, [])
 
   const sendMessage = useCallback(
     async (content) => {
-      if (!currentUser || !content.trim() || isLoading) return
+      if (!content.trim() || isLoading) return
 
       setError(null)
 
       let sessionId = activeSessionId
+      let isNewSession = false
 
       if (!sessionId) {
-        sessionId = await createNewSession()
-        if (!sessionId) return
+        sessionId = generateId()
+        isNewSession = true
+        const newSession = {
+          id: sessionId,
+          title: content.trim().slice(0, 50) + (content.trim().length > 50 ? '...' : ''),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          messages: [],
+        }
+        setSessions((prev) => [newSession, ...prev])
+        setActiveSessionId(sessionId)
       }
 
       const userMessage = {
@@ -125,19 +82,19 @@ export function useChat() {
       setMessages(updatedMessages)
       setIsLoading(true)
 
+      // Update session title on first message
+      if (!isNewSession && messages.length === 0) {
+        setSessions((prev) =>
+          prev.map((s) =>
+            s.id === sessionId
+              ? { ...s, title: content.trim().slice(0, 50) + (content.trim().length > 50 ? '...' : '') }
+              : s
+          )
+        )
+      }
+
       try {
-        const chatRef = doc(db, 'users', currentUser.uid, 'chats', sessionId)
-
-        const isFirstMessage = messages.length === 0
-        const title = isFirstMessage
-          ? content.trim().slice(0, 50) + (content.trim().length > 50 ? '...' : '')
-          : undefined
-
-        const aiMessages = updatedMessages.map(({ role, content: c }) => ({
-          role,
-          content: c,
-        }))
-
+        const aiMessages = updatedMessages.map(({ role, content: c }) => ({ role, content: c }))
         const aiResponse = await sendToAI(aiMessages)
 
         const assistantMessage = {
@@ -149,23 +106,23 @@ export function useChat() {
         const finalMessages = [...updatedMessages, assistantMessage]
         setMessages(finalMessages)
 
-        const updateData = {
-          messages: finalMessages,
-          updatedAt: serverTimestamp(),
-        }
-        if (title) updateData.title = title
-
-        await updateDoc(chatRef, updateData)
+        // Save messages into session state
+        setSessions((prev) =>
+          prev.map((s) =>
+            s.id === sessionId
+              ? { ...s, messages: finalMessages, updatedAt: new Date().toISOString() }
+              : s
+          )
+        )
       } catch (err) {
         console.error('Error sending message:', err)
         setError(err.message || 'Failed to get AI response. Please try again.')
-        // Keep the user message visible — do NOT revert
         setMessages(updatedMessages)
       } finally {
         setIsLoading(false)
       }
     },
-    [currentUser, activeSessionId, messages, isLoading, createNewSession]
+    [activeSessionId, messages, isLoading]
   )
 
   return {

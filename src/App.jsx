@@ -1,24 +1,11 @@
 import React, { useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { LanguageProvider } from './context/LanguageContext'
-import Login from './components/Auth/Login'
-import Signup from './components/Auth/Signup'
 import Navbar from './components/Layout/Navbar'
 import ChatSidebar from './components/Chat/ChatSidebar'
 import ChatWindow from './components/Chat/ChatWindow'
 import { useChat } from './hooks/useChat'
-
-function ProtectedRoute({ children }) {
-  const { currentUser } = useAuth()
-  return currentUser ? children : <Navigate to="/login" replace />
-}
-
-function PublicRoute({ children }) {
-  const { currentUser } = useAuth()
-  return !currentUser ? children : <Navigate to="/chat" replace />
-}
 
 function ChatPage() {
   const {
@@ -36,8 +23,8 @@ function ChatPage() {
 
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  async function handleNewChat() {
-    await createNewSession()
+  function handleNewChat() {
+    createNewSession()
     setSidebarOpen(false)
   }
 
@@ -75,36 +62,10 @@ export default function App() {
     <BrowserRouter>
       <ThemeProvider>
         <LanguageProvider>
-          <AuthProvider>
           <Routes>
-            <Route path="/" element={<Navigate to="/chat" replace />} />
-            <Route
-              path="/login"
-              element={
-                <PublicRoute>
-                  <Login />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="/signup"
-              element={
-                <PublicRoute>
-                  <Signup />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="/chat"
-              element={
-                <ProtectedRoute>
-                  <ChatPage />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/" element={<ChatPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </AuthProvider>
         </LanguageProvider>
       </ThemeProvider>
     </BrowserRouter>
