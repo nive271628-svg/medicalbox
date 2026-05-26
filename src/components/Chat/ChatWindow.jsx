@@ -53,8 +53,11 @@ function EmptyState({ onNewChat }) {
               text-sm
               hover:border-blue-400 dark:hover:border-blue-500
               hover:bg-blue-50 dark:hover:bg-blue-900/20
-              transition-colors
+              active:bg-blue-100 dark:active:bg-blue-900/40
+              active:scale-95
+              transition-all
               focus:outline-none focus:ring-2 focus:ring-blue-500
+              cursor-pointer select-none
             "
           >
             {suggestion}

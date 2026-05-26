@@ -110,8 +110,9 @@ export function useChat(userId) {
       setMessages(updatedMessages)
       setIsLoading(true)
 
-      // Update title on first message of an existing session
-      if (messages.length === 0) {
+      // Update title only for existing sessions on their first message
+      // (new sessions already have the title set during addDoc above)
+      if (messages.length === 0 && activeSessionId) {
         await updateDoc(doc(db, 'users', userId, 'sessions', sessionId), {
           title: content.trim().slice(0, 50) + (content.trim().length > 50 ? '...' : ''),
           updatedAt: serverTimestamp(),
