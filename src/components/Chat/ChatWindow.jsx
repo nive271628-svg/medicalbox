@@ -76,7 +76,7 @@ export default function ChatWindow({ messages, isLoading, error, onSend, onClear
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isLoading])
 
-  const isEmpty = messages.length === 0 && !error
+  const isEmpty = messages.length === 0 && !isLoading && !error
 
   return (
     <div className="flex flex-col flex-1 min-h-0 bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
@@ -84,7 +84,7 @@ export default function ChatWindow({ messages, isLoading, error, onSend, onClear
       <div
         className="flex-1 overflow-y-auto"
       >
-        {isEmpty && !isLoading ? (
+        {isEmpty ? (
           <EmptyState onNewChat={onSend} />
         ) : (
           <div className="w-full max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">

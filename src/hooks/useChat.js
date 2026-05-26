@@ -110,6 +110,10 @@ export function useChat(userId) {
     }
 
     setError(null)
+    // Set loading TRUE immediately — before any async work
+    // This flips isEmpty in ChatWindow right away so the UI switches from EmptyState to messages view
+    setIsLoading(true)
+    isLoadingRef.current = true
 
     // Create a new session if none is active
     if (!sessionId) {
@@ -134,8 +138,6 @@ export function useChat(userId) {
     const updatedMessages = [...currentMessages, userMessage]
     setMessages(updatedMessages)
     messagesRef.current = updatedMessages
-    setIsLoading(true)
-    isLoadingRef.current = true
 
     // Update title only for existing sessions on their first message
     if (currentMessages.length === 0 && activeSessionIdRef.current) {
