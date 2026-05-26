@@ -68,6 +68,19 @@ export async function sendMessage(messages, langCode = 'en') {
     throw new Error('Groq API key is not configured. Please set VITE_GROQ_API_KEY.')
   }
 
+  const langName = LANGUAGE_NAMES[langCode] || 'English'
+
+  // Inject language instruction into the last user message for stronger enforcement
+  const processedMessages = messages.map((msg, i) => {
+    if (msg.role === 'user' && i === messages.length - 1) {
+      return {
+        ...msg,
+        content: `${msg.content}\n\n[IMPORTANT: Reply only in ${langName}${langCode !== 'en' ? ' script' : ''}. Do not use English or any other language.]`,
+      }
+    }
+    return msg
+  })
+
   const response = await fetch(GROQ_API_URL, {
     method: 'POST',
     headers: {
@@ -78,7 +91,7 @@ export async function sendMessage(messages, langCode = 'en') {
       model: MODEL,
       messages: [
         { role: 'system', content: buildSystemPrompt(langCode) },
-        ...messages.map(({ role, content }) => ({ role, content })),
+        ...processedMessages.map(({ role, content }) => ({ role, content })),
       ],
       temperature: 0.7,
       max_tokens: 2048,
