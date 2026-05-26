@@ -65,6 +65,37 @@ function renderPlainAnswer(content) {
   )
 }
 
+function detectLang(text) {
+  if (!text) return 'en-US'
+  // Tamil
+  if (/[\u0B80-\u0BFF]/.test(text)) return 'ta-IN'
+  // Hindi / Devanagari
+  if (/[\u0900-\u097F]/.test(text)) return 'hi-IN'
+  // Telugu
+  if (/[\u0C00-\u0C7F]/.test(text)) return 'te-IN'
+  // Kannada
+  if (/[\u0C80-\u0CFF]/.test(text)) return 'kn-IN'
+  // Malayalam
+  if (/[\u0D00-\u0D7F]/.test(text)) return 'ml-IN'
+  // Bengali
+  if (/[\u0980-\u09FF]/.test(text)) return 'bn-IN'
+  // Arabic / Urdu
+  if (/[\u0600-\u06FF]/.test(text)) return 'ar-SA'
+  // Chinese
+  if (/[\u4E00-\u9FFF]/.test(text)) return 'zh-CN'
+  // Japanese
+  if (/[\u3040-\u30FF]/.test(text)) return 'ja-JP'
+  // Korean
+  if (/[\uAC00-\uD7AF]/.test(text)) return 'ko-KR'
+  // Russian / Cyrillic
+  if (/[\u0400-\u04FF]/.test(text)) return 'ru-RU'
+  // Greek
+  if (/[\u0370-\u03FF]/.test(text)) return 'el-GR'
+  // Thai
+  if (/[\u0E00-\u0E7F]/.test(text)) return 'th-TH'
+  return 'en-US'
+}
+
 function MessageActions({ content }) {
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -78,10 +109,21 @@ function MessageActions({ content }) {
     }
 
     const speak = () => {
+      const locale = detectLang(plainText)
+      const voices = window.speechSynthesis.getVoices()
       const utterance = new SpeechSynthesisUtterance(plainText)
+      utterance.lang = locale
       utterance.rate = 0.92
       utterance.pitch = 0.9
       utterance.volume = 1
+
+      // Find best matching voice for detected language
+      const voice =
+        voices.find((v) => v.lang === locale) ||
+        voices.find((v) => v.lang.startsWith(locale.split('-')[0])) ||
+        null
+      if (voice) utterance.voice = voice
+
       utterance.onend = () => setIsSpeaking(false)
       utterance.onerror = () => setIsSpeaking(false)
       window.speechSynthesis.cancel()

@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { Bot, Mail, Lock, User, UserPlus } from 'lucide-react'
+import { Mail, Lock, User, UserPlus } from 'lucide-react'
 
 export default function Signup() {
   const [displayName, setDisplayName] = useState('')
@@ -47,8 +47,8 @@ export default function Signup() {
 
         {/* Logo */}
         <div className="text-center mb-6 sm:mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-blue-600 mb-3 shadow-lg">
-            <Bot className="w-7 h-7 sm:w-9 sm:h-9 text-white" />
+          <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden mb-3 shadow-lg">
+            <img src="/doccare.svg" alt="DocCareAI" className="w-full h-full" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">DocCareAI</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm sm:text-base">Create your account</p>

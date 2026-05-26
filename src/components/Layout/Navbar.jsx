@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bot, LogOut, ChevronDown, Menu } from 'lucide-react'
+import { LogOut, ChevronDown, Menu } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import ThemeToggle from './ThemeToggle'
 
@@ -35,8 +35,8 @@ export default function Navbar({ onMenuToggle }) {
           <Menu className="w-5 h-5" />
         </button>
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
-            <Bot className="w-5 h-5 text-white" />
+          <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0">
+            <img src="/doccare.svg" alt="DocCareAI" className="w-full h-full" />
           </div>
           <span className="font-semibold text-slate-900 dark:text-white text-sm sm:text-base">
             DocCareAI
