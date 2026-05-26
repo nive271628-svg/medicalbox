@@ -123,11 +123,22 @@ function MessageActions({ content }) {
       utterance.pitch = 1
       utterance.volume = 1
 
+      // Build a priority list of voice candidates for the detected locale
+      const langPrefix = locale.split('-')[0] // e.g. 'hi' from 'hi-IN'
+
       const voice =
+        // 1. Exact locale match (e.g. hi-IN)
         voices.find((v) => v.lang === locale) ||
-        voices.find((v) => v.lang.startsWith(locale.split('-')[0])) ||
-        voices.find((v) => v.lang.startsWith('en')) ||
+        // 2. Same language, any region (e.g. hi-IN, hi-IN-x-*)
+        voices.find((v) => v.lang.startsWith(langPrefix + '-')) ||
+        // 3. Bare language code
+        voices.find((v) => v.lang === langPrefix) ||
+        // 4. Google/Microsoft named voices for the language (common in Chrome)
+        voices.find((v) => v.name.toLowerCase().includes(langPrefix)) ||
         null
+
+      // Only assign a voice if we found one — otherwise let the browser
+      // use its built-in engine for the lang tag (better than forcing English)
       if (voice) utterance.voice = voice
 
       utterance.onstart = () => setIsSpeaking(true)
@@ -146,9 +157,20 @@ function MessageActions({ content }) {
         clearInterval(resumeTimer)
         setIsSpeaking(false)
       }
-      utterance.onerror = () => {
-        clearInterval(resumeTimer)
-        setIsSpeaking(false)
+      utterance.onerror = (e) => {
+        // 'not-allowed' or 'language-unavailable' — try again without a specific voice
+        if (e.error === 'language-unavailable' || e.error === 'voice-unavailable') {
+          window.speechSynthesis.cancel()
+          const fallback = new SpeechSynthesisUtterance(plainText)
+          fallback.lang = locale
+          fallback.rate = 0.9
+          fallback.onend = () => setIsSpeaking(false)
+          fallback.onerror = () => setIsSpeaking(false)
+          window.speechSynthesis.speak(fallback)
+        } else {
+          clearInterval(resumeTimer)
+          setIsSpeaking(false)
+        }
       }
 
       setIsSpeaking(true)
