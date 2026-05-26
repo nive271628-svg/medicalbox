@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ThemeProvider } from './context/ThemeContext'
-import { LanguageProvider } from './context/LanguageContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Navbar from './components/Layout/Navbar'
 import ChatSidebar from './components/Chat/ChatSidebar'
@@ -79,8 +78,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <ThemeProvider>
-        <LanguageProvider>
-          <AuthProvider>
+        <AuthProvider>
             <Routes>
               <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
               <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
@@ -88,8 +86,7 @@ export default function App() {
               <Route path="/" element={<Navigate to="/chat" replace />} />
               <Route path="*" element={<Navigate to="/chat" replace />} />
             </Routes>
-          </AuthProvider>
-        </LanguageProvider>
+        </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>
   )
