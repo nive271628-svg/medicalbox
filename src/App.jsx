@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
+import { LanguageProvider } from './context/LanguageContext'
 import Login from './components/Auth/Login'
 import Signup from './components/Auth/Signup'
 import Navbar from './components/Layout/Navbar'
@@ -73,7 +74,8 @@ export default function App() {
   return (
     <BrowserRouter>
       <ThemeProvider>
-        <AuthProvider>
+        <LanguageProvider>
+          <AuthProvider>
           <Routes>
             <Route path="/" element={<Navigate to="/chat" replace />} />
             <Route
@@ -103,6 +105,7 @@ export default function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </AuthProvider>
+        </LanguageProvider>
       </ThemeProvider>
     </BrowserRouter>
   )

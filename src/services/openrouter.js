@@ -1,7 +1,22 @@
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
 const MODEL = 'llama-3.1-8b-instant'
 
-const SYSTEM_PROMPT = `You are DocCareAI, a friendly and natural human-like assistant. Speak casually and naturally like a real person. Avoid robotic replies, overly formal sentences, and repetitive AI phrases.
+const LANGUAGE_NAMES = {
+  en: 'English',
+  ta: 'Tamil',
+  hi: 'Hindi',
+  ar: 'Arabic',
+  fr: 'French',
+  es: 'Spanish',
+  de: 'German',
+  zh: 'Chinese',
+}
+
+function buildSystemPrompt(langCode) {
+  const langName = LANGUAGE_NAMES[langCode] || 'English'
+  return `You are DocCareAI, a friendly and natural human-like assistant. Speak casually and naturally like a real person. Avoid robotic replies, overly formal sentences, and repetitive AI phrases.
+
+IMPORTANT: Always respond in ${langName}. No matter what language the user writes in, your reply must be in ${langName}.
 
 Rules:
 - Keep responses conversational
@@ -10,18 +25,17 @@ Rules:
 - Ask follow-up questions sometimes
 - Avoid sounding like a textbook
 - Do not mention being an AI unless necessary
-- Use modern casual English
 - React naturally to jokes, excitement, confusion, and emotions
 - Keep the flow smooth like a real chat conversation
-- Avoid repeating the user's words too much
 - Sound confident, warm, and engaging
 - Never use markdown symbols like **, ##, or backticks in your response — plain text only
 
 Style: Human, Relaxed, Smart, Slightly playful, Supportive and interactive
 
 Your goal is to make the conversation feel real and natural.`
+}
 
-export async function sendMessage(messages) {
+export async function sendMessage(messages, langCode = 'en') {
   const apiKey = import.meta.env.VITE_GROQ_API_KEY
 
   if (!apiKey) {
@@ -37,7 +51,7 @@ export async function sendMessage(messages) {
     body: JSON.stringify({
       model: MODEL,
       messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'system', content: buildSystemPrompt(langCode) },
         ...messages.map(({ role, content }) => ({ role, content })),
       ],
       temperature: 0.7,
