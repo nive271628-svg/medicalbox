@@ -52,6 +52,9 @@ export default function Login() {
 
         {/* Logo */}
         <div className="text-center mb-6 sm:mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full overflow-hidden mb-3 shadow-lg">
+            <img src="/doccare.svg" alt="DocCareAI" className="w-full h-full" />
+          </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">DocCareAI</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm sm:text-base">Sign in to your account</p>
         </div>
