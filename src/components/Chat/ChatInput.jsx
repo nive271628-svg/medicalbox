@@ -92,7 +92,8 @@ export default function ChatInput({ onSend, isLoading, disabled }) {
       </form>
 
       <p className="text-center text-xs text-slate-400 dark:text-slate-500 mt-2">
-        DocCareAI can make mistakes. Always consult a medical professional.
+        DocCareAI can make mistakes. Always consult a medical professional. <br />
+        <span className="text-slate-300 dark:text-slate-600">© SpeedfyTechX · Built by Nivedha L</span>
       </p>
     </div>
   )

@@ -1,13 +1,12 @@
 import React, { useEffect, useRef } from 'react'
-import { Sparkles } from 'lucide-react'
 import MessageBubble from './MessageBubble'
 import ChatInput from './ChatInput'
 
 function TypingIndicator() {
   return (
     <div className="flex gap-2 sm:gap-3">
-      <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0 mt-1">
-        <Sparkles className="w-4 h-4 text-white" />
+      <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 mt-1 shadow">
+        <img src="/doccare.svg" alt="DocCareAI" className="w-full h-full" />
       </div>
       <div className="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
         <div className="flex items-center gap-1.5">
@@ -30,8 +29,8 @@ function EmptyState({ onNewChat }) {
 
   return (
     <div className="flex flex-col items-center justify-center h-full px-4 py-10 text-center">
-      <div className="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center mb-4 shadow-lg">
-        <Sparkles className="w-8 h-8 text-white" />
+      <div className="w-16 h-16 rounded-2xl overflow-hidden mb-4 shadow-lg">
+        <img src="/doccare.svg" alt="DocCareAI" className="w-full h-full" />
       </div>
       <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mb-2">
         How can DocCareAI help you?
