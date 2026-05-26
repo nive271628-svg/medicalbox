@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react'
+import { AlertCircle } from 'lucide-react'
 import MessageBubble from './MessageBubble'
 import ChatInput from './ChatInput'
 
@@ -94,7 +95,7 @@ export default function ChatWindow({ messages, isLoading, error, onSend, onClear
             {error && (
               <div className="flex items-start gap-2 sm:gap-3">
                 <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0 mt-1">
-                  <Sparkles className="w-4 h-4 text-red-500" />
+                  <AlertCircle className="w-4 h-4 text-red-500" />
                 </div>
                 <div className="flex-1">
                   <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl rounded-tl-sm px-4 py-3">
