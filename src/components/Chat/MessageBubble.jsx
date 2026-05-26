@@ -1,30 +1,5 @@
 import React, { useState, useCallback } from 'react'
 import { Bot, User, Volume2, VolumeX, Copy, Check } from 'lucide-react'
-import { useLanguage } from '../../context/LanguageContext'
-
-// Map language codes to BCP-47 locale tags for SpeechSynthesis
-const LANG_TO_LOCALE = {
-  en: 'en-US',
-  ta: 'ta-IN',
-  hi: 'hi-IN',
-  te: 'te-IN',
-  kn: 'kn-IN',
-  ml: 'ml-IN',
-  bn: 'bn-IN',
-  ur: 'ur-PK',
-  ar: 'ar-SA',
-  fr: 'fr-FR',
-  es: 'es-ES',
-  de: 'de-DE',
-  pt: 'pt-BR',
-  ru: 'ru-RU',
-  zh: 'zh-CN',
-  ja: 'ja-JP',
-  ko: 'ko-KR',
-  tr: 'tr-TR',
-  id: 'id-ID',
-  ms: 'ms-MY',
-}
 
 function formatTime(timestamp) {
   if (!timestamp) return ''
@@ -93,9 +68,7 @@ function renderPlainAnswer(content) {
 function MessageActions({ content }) {
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [copied, setCopied] = useState(false)
-  const { language } = useLanguage()
   const plainText = stripMarkdown(content)
-  const locale = LANG_TO_LOCALE[language] || 'en-US'
 
   const toggleSpeaking = useCallback(() => {
     if (isSpeaking) {
@@ -105,24 +78,13 @@ function MessageActions({ content }) {
     }
 
     const speak = () => {
-      const voices = window.speechSynthesis.getVoices()
       const utterance = new SpeechSynthesisUtterance(plainText)
-      utterance.lang = locale
       utterance.rate = 0.92
       utterance.pitch = 0.9
       utterance.volume = 1
-
-      // Try to find a voice matching the selected language
-      const matchedVoice =
-        voices.find((v) => v.lang === locale) ||
-        voices.find((v) => v.lang.startsWith(locale.split('-')[0])) ||
-        null
-
-      if (matchedVoice) utterance.voice = matchedVoice
-
       utterance.onend = () => setIsSpeaking(false)
       utterance.onerror = () => setIsSpeaking(false)
-      window.speechSynthesis.cancel() // clear any previous
+      window.speechSynthesis.cancel()
       window.speechSynthesis.speak(utterance)
       setIsSpeaking(true)
     }
@@ -136,7 +98,7 @@ function MessageActions({ content }) {
         speak()
       }
     }
-  }, [isSpeaking, plainText, locale])
+  }, [isSpeaking, plainText])
 
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(plainText).then(() => {

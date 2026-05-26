@@ -14,11 +14,9 @@ import {
 import { db } from '../services/firebase'
 import { sendMessage as sendToAI } from '../services/openrouter'
 import { useAuth } from '../context/AuthContext'
-import { useLanguage } from '../context/LanguageContext'
 
 export function useChat() {
   const { currentUser } = useAuth()
-  const { language } = useLanguage()
   const [sessions, setSessions] = useState([])
   const [activeSessionId, setActiveSessionId] = useState(null)
   const [messages, setMessages] = useState([])
@@ -140,7 +138,7 @@ export function useChat() {
           content: c,
         }))
 
-        const aiResponse = await sendToAI(aiMessages, language)
+        const aiResponse = await sendToAI(aiMessages)
 
         const assistantMessage = {
           role: 'assistant',
