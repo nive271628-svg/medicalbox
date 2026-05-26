@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { AlertCircle } from 'lucide-react'
 import MessageBubble from './MessageBubble'
 import ChatInput from './ChatInput'

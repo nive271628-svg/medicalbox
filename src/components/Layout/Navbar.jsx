@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { Menu, LogOut, User } from 'lucide-react'
+import { useState } from 'react'
+import { Menu, LogOut } from 'lucide-react'
 import ThemeToggle from './ThemeToggle'
 import { useAuth } from '../../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
