@@ -67,7 +67,6 @@ function EmptyState({ onNewChat }) {
 
 export default function ChatWindow({ messages, isLoading, error, onSend, onClearError }) {
   const bottomRef = useRef(null)
-  const containerRef = useRef(null)
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -80,7 +79,6 @@ export default function ChatWindow({ messages, isLoading, error, onSend, onClear
     <div className="flex flex-col flex-1 min-h-0 bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
       {/* Messages area */}
       <div
-        ref={containerRef}
         className="flex-1 overflow-y-auto"
       >
         {isEmpty && !isLoading ? (

@@ -34,7 +34,7 @@ export default function ChatInput({ onSend, isLoading, disabled }) {
   const canSend = value.trim().length > 0 && !isLoading && !disabled
 
   return (
-    <div className="border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 pt-3 pb-4 pb-[max(1rem,env(safe-area-inset-bottom))] transition-colors duration-200">
+    <div className="border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] transition-colors duration-200">
       <form
         onSubmit={handleSubmit}
         className="flex items-end gap-2 max-w-3xl mx-auto"

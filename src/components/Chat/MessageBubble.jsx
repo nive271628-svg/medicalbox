@@ -131,11 +131,6 @@ function MessageActions({ content }) {
       if (voice) utterance.voice = voice
 
       utterance.onstart = () => setIsSpeaking(true)
-      utterance.onend = () => setIsSpeaking(false)
-      utterance.onerror = (e) => {
-        console.error('TTS error:', e)
-        setIsSpeaking(false)
-      }
 
       // Chrome bug fix: keep speech alive with a periodic resume
       const resumeTimer = setInterval(() => {
