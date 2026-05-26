@@ -219,6 +219,11 @@ export default function MessageBubble({ message }) {
       </div>
 
       <div className={`flex flex-col max-w-[82%] sm:max-w-[75%] ${isUser ? 'items-end' : 'items-start'}`}>
+        {!isUser && (
+          <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1 px-1">
+            DocCareAI
+          </span>
+        )}
         <div className={`px-3 sm:px-4 py-2.5 sm:py-3 rounded-2xl text-sm leading-relaxed
           ${isUser
             ? 'bg-blue-600 text-white rounded-tr-sm'
