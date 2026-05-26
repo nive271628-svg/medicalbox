@@ -26,13 +26,21 @@ export const LANGUAGES = [
 ]
 
 export function LanguageProvider({ children }) {
-  const [language, setLanguage] = useState(() =>
-    localStorage.getItem('doccareai-lang') || 'en'
-  )
+  const [language, setLanguage] = useState(() => {
+    try {
+      return localStorage.getItem('doccareai-lang') || 'en'
+    } catch {
+      return 'en'
+    }
+  })
 
   function changeLanguage(code) {
     setLanguage(code)
-    localStorage.setItem('doccareai-lang', code)
+    try {
+      localStorage.setItem('doccareai-lang', code)
+    } catch {
+      // ignore
+    }
   }
 
   return (
