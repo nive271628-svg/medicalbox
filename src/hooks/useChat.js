@@ -1,32 +1,61 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
+import {
+  collection,
+  doc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  onSnapshot,
+  query,
+  orderBy,
+  serverTimestamp,
+} from 'firebase/firestore'
+import { db } from '../services/firebase'
 import { sendMessage as sendToAI } from '../services/openrouter'
 
-function generateId() {
-  return Math.random().toString(36).slice(2) + Date.now().toString(36)
-}
-
-export function useChat() {
+export function useChat(userId) {
   const [sessions, setSessions] = useState([])
   const [activeSessionId, setActiveSessionId] = useState(null)
   const [messages, setMessages] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  const createNewSession = useCallback(() => {
-    const id = generateId()
-    const newSession = {
-      id,
-      title: 'New Chat',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      messages: [],
+  // Real-time listener for sessions from Firestore
+  useEffect(() => {
+    if (!userId) {
+      setSessions([])
+      setActiveSessionId(null)
+      setMessages([])
+      return
     }
-    setSessions((prev) => [newSession, ...prev])
-    setActiveSessionId(id)
+
+    const sessionsRef = collection(db, 'users', userId, 'sessions')
+    const q = query(sessionsRef, orderBy('updatedAt', 'desc'))
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const loaded = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }))
+      setSessions(loaded)
+    })
+
+    return unsubscribe
+  }, [userId])
+
+  const createNewSession = useCallback(async () => {
+    if (!userId) return null
+
+    const sessionsRef = collection(db, 'users', userId, 'sessions')
+    const docRef = await addDoc(sessionsRef, {
+      title: 'New Chat',
+      messages: [],
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    })
+
+    setActiveSessionId(docRef.id)
     setMessages([])
     setError(null)
-    return id
-  }, [])
+    return docRef.id
+  }, [userId])
 
   const selectSession = useCallback((sessionId) => {
     setSessions((prev) => {
@@ -38,8 +67,9 @@ export function useChat() {
     setError(null)
   }, [])
 
-  const deleteSession = useCallback((sessionId) => {
-    setSessions((prev) => prev.filter((s) => s.id !== sessionId))
+  const deleteSession = useCallback(async (sessionId) => {
+    if (!userId) return
+    await deleteDoc(doc(db, 'users', userId, 'sessions', sessionId))
     setActiveSessionId((prev) => {
       if (prev === sessionId) {
         setMessages([])
@@ -47,28 +77,26 @@ export function useChat() {
       }
       return prev
     })
-  }, [])
+  }, [userId])
 
   const sendMessage = useCallback(
     async (content) => {
-      if (!content.trim() || isLoading) return
+      if (!content.trim() || isLoading || !userId) return
 
       setError(null)
 
       let sessionId = activeSessionId
-      let isNewSession = false
 
+      // Create a new session in Firestore if none is active
       if (!sessionId) {
-        sessionId = generateId()
-        isNewSession = true
-        const newSession = {
-          id: sessionId,
+        const sessionsRef = collection(db, 'users', userId, 'sessions')
+        const docRef = await addDoc(sessionsRef, {
           title: content.trim().slice(0, 50) + (content.trim().length > 50 ? '...' : ''),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
           messages: [],
-        }
-        setSessions((prev) => [newSession, ...prev])
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        })
+        sessionId = docRef.id
         setActiveSessionId(sessionId)
       }
 
@@ -82,15 +110,12 @@ export function useChat() {
       setMessages(updatedMessages)
       setIsLoading(true)
 
-      // Update session title on first message
-      if (!isNewSession && messages.length === 0) {
-        setSessions((prev) =>
-          prev.map((s) =>
-            s.id === sessionId
-              ? { ...s, title: content.trim().slice(0, 50) + (content.trim().length > 50 ? '...' : '') }
-              : s
-          )
-        )
+      // Update title on first message of an existing session
+      if (messages.length === 0) {
+        await updateDoc(doc(db, 'users', userId, 'sessions', sessionId), {
+          title: content.trim().slice(0, 50) + (content.trim().length > 50 ? '...' : ''),
+          updatedAt: serverTimestamp(),
+        })
       }
 
       try {
@@ -106,14 +131,11 @@ export function useChat() {
         const finalMessages = [...updatedMessages, assistantMessage]
         setMessages(finalMessages)
 
-        // Save messages into session state
-        setSessions((prev) =>
-          prev.map((s) =>
-            s.id === sessionId
-              ? { ...s, messages: finalMessages, updatedAt: new Date().toISOString() }
-              : s
-          )
-        )
+        // Persist messages to Firestore
+        await updateDoc(doc(db, 'users', userId, 'sessions', sessionId), {
+          messages: finalMessages,
+          updatedAt: serverTimestamp(),
+        })
       } catch (err) {
         console.error('Error sending message:', err)
         setError(err.message || 'Failed to get AI response. Please try again.')
@@ -122,7 +144,7 @@ export function useChat() {
         setIsLoading(false)
       }
     },
-    [activeSessionId, messages, isLoading]
+    [userId, activeSessionId, messages, isLoading]
   )
 
   return {
