@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { Mail, Lock, LogIn, Chrome, Sparkles } from 'lucide-react'
+import { Mail, Lock, LogIn, Chrome } from 'lucide-react'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -52,9 +52,6 @@ export default function Login() {
 
         {/* Logo */}
         <div className="text-center mb-6 sm:mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-blue-600 mb-3 shadow-lg">
-            <Sparkles className="w-8 h-8 sm:w-9 sm:h-9 text-white" />
-          </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">DocCareAI</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm sm:text-base">Sign in to your account</p>
         </div>
