@@ -1,5 +1,5 @@
-const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
-const MODEL = 'llama-3.3-70b-versatile'
+const OPENROUTER_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
+const MODEL = 'llama-3.1-8b-instant'
 
 const SYSTEM_PROMPT = `You are DocCareAI, a friendly health companion who talks like a real human — warm, natural, and easy to talk to. Not a robot. Not overly formal. Just like a knowledgeable friend who happens to know a lot about health.
 
@@ -43,7 +43,7 @@ export async function sendMessage(messages) {
     throw new Error('Groq API key is not configured. Please set VITE_GROQ_API_KEY.')
   }
 
-  const response = await fetch(GROQ_API_URL, {
+  const response = await fetch(OPENROUTER_API_URL, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
@@ -56,7 +56,7 @@ export async function sendMessage(messages) {
         ...messages.map(({ role, content }) => ({ role, content })),
       ],
       temperature: 0.7,
-      max_tokens: 2048,
+      max_tokens: 1024,
     }),
   })
 
@@ -65,7 +65,7 @@ export async function sendMessage(messages) {
     console.error('Groq error:', response.status, errorData)
     throw new Error(
       errorData?.error?.message ||
-        `Groq API error: ${response.status} ${response.statusText}`
+        `API error: ${response.status} ${response.statusText}`
     )
   }
 
@@ -73,7 +73,7 @@ export async function sendMessage(messages) {
   const content = data?.choices?.[0]?.message?.content
 
   if (!content) {
-    throw new Error('No response received from Groq.')
+    throw new Error('No response received.')
   }
 
   return content
