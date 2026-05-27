@@ -113,25 +113,7 @@ function MessageActions({ content }) {
       return
     }
 
-    // Split text into small chunks (~150 chars) at sentence boundaries
-    // This fixes Chrome/mobile bug where long utterances cut off
-    function chunkText(text) {
-      const sentences = text.match(/[^.!?]+[.!?]*/g) || [text]
-      const chunks = []
-      let current = ''
-      for (const s of sentences) {
-        if ((current + s).length > 150) {
-          if (current.trim()) chunks.push(current.trim())
-          current = s
-        } else {
-          current += s
-        }
-      }
-      if (current.trim()) chunks.push(current.trim())
-      return chunks.length > 0 ? chunks : [text]
-    }
-
-    const speakChunks = (voices) => {
+    const speakText = (voices) => {
       window.speechSynthesis.cancel()
       const locale = detectLang(plainText)
       const langPrefix = locale.split('-')[0]
@@ -142,47 +124,48 @@ function MessageActions({ content }) {
         voices.find((v) => v.name.toLowerCase().includes(langPrefix)) ||
         null
 
-      const chunks = chunkText(plainText)
-      let index = 0
-      setIsSpeaking(true)
+      const utterance = new SpeechSynthesisUtterance(plainText)
+      utterance.lang = locale
+      utterance.rate = 0.95
+      utterance.pitch = 1
+      utterance.volume = 1
+      if (voice) utterance.voice = voice
 
-      function speakNext() {
-        if (index >= chunks.length) {
-          setIsSpeaking(false)
-          return
-        }
-        const utterance = new SpeechSynthesisUtterance(chunks[index])
-        utterance.lang = locale
-        utterance.rate = 0.95
-        utterance.pitch = 1
-        utterance.volume = 1
-        if (voice) utterance.voice = voice
-
-        utterance.onend = () => {
-          index++
-          speakNext()
-        }
-        utterance.onerror = (e) => {
-          if (e.error === 'interrupted') {
-            // user stopped — do nothing
-          } else {
-            index++
-            speakNext()
+      // Mobile fix: resume every 5s to prevent browser from killing speech
+      let resumeTimer = null
+      const startResume = () => {
+        resumeTimer = setInterval(() => {
+          if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+            window.speechSynthesis.pause()
+            window.speechSynthesis.resume()
           }
-        }
-        window.speechSynthesis.speak(utterance)
+        }, 5000)
       }
 
-      speakNext()
+      utterance.onstart = () => {
+        setIsSpeaking(true)
+        startResume()
+      }
+      utterance.onend = () => {
+        clearInterval(resumeTimer)
+        setIsSpeaking(false)
+      }
+      utterance.onerror = (e) => {
+        clearInterval(resumeTimer)
+        if (e.error !== 'interrupted') setIsSpeaking(false)
+      }
+
+      window.speechSynthesis.speak(utterance)
+      setIsSpeaking(true)
     }
 
     const voices = window.speechSynthesis.getVoices()
     if (voices.length > 0) {
-      speakChunks(voices)
+      speakText(voices)
     } else {
       window.speechSynthesis.onvoiceschanged = () => {
         window.speechSynthesis.onvoiceschanged = null
-        speakChunks(window.speechSynthesis.getVoices())
+        speakText(window.speechSynthesis.getVoices())
       }
       window.speechSynthesis.getVoices()
     }
