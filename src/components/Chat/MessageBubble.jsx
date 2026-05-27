@@ -66,7 +66,24 @@ function MessageActions({ content }) {
       return
     }
 
-    const speakText = (voices) => {
+    // Split into chunks of max 200 chars at word boundaries
+    function splitIntoChunks(text, maxLen = 200) {
+      const words = text.split(' ')
+      const chunks = []
+      let chunk = ''
+      for (const word of words) {
+        if ((chunk + ' ' + word).trim().length > maxLen) {
+          if (chunk) chunks.push(chunk.trim())
+          chunk = word
+        } else {
+          chunk = (chunk + ' ' + word).trim()
+        }
+      }
+      if (chunk) chunks.push(chunk.trim())
+      return chunks
+    }
+
+    const speak = (voices) => {
       window.speechSynthesis.cancel()
       const locale = detectLang(plainText)
       const langPrefix = locale.split('-')[0]
@@ -77,48 +94,36 @@ function MessageActions({ content }) {
         voices.find((v) => v.name.toLowerCase().includes(langPrefix)) ||
         null
 
-      const utterance = new SpeechSynthesisUtterance(plainText)
-      utterance.lang = locale
-      utterance.rate = 0.95
-      utterance.pitch = 1
-      utterance.volume = 1
-      if (voice) utterance.voice = voice
+      const chunks = splitIntoChunks(plainText)
 
-      // Mobile fix: resume every 5s to prevent browser from killing speech
-      let resumeTimer = null
-      const startResume = () => {
-        resumeTimer = setInterval(() => {
-          if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
-            window.speechSynthesis.pause()
-            window.speechSynthesis.resume()
-          }
-        }, 5000)
-      }
+      // Queue ALL utterances at once during the user gesture — this is the key
+      // mobile fix: all speak() calls happen synchronously in the same tap handler
+      chunks.forEach((chunk, i) => {
+        const utt = new SpeechSynthesisUtterance(chunk)
+        utt.lang = locale
+        utt.rate = 0.95
+        utt.pitch = 1
+        utt.volume = 1
+        if (voice) utt.voice = voice
 
-      utterance.onstart = () => {
-        setIsSpeaking(true)
-        startResume()
-      }
-      utterance.onend = () => {
-        clearInterval(resumeTimer)
-        setIsSpeaking(false)
-      }
-      utterance.onerror = (e) => {
-        clearInterval(resumeTimer)
-        if (e.error !== 'interrupted') setIsSpeaking(false)
-      }
+        if (i === 0) utt.onstart = () => setIsSpeaking(true)
+        if (i === chunks.length - 1) {
+          utt.onend = () => setIsSpeaking(false)
+          utt.onerror = (e) => { if (e.error !== 'interrupted') setIsSpeaking(false) }
+        }
+        window.speechSynthesis.speak(utt)
+      })
 
-      window.speechSynthesis.speak(utterance)
       setIsSpeaking(true)
     }
 
     const voices = window.speechSynthesis.getVoices()
     if (voices.length > 0) {
-      speakText(voices)
+      speak(voices)
     } else {
       window.speechSynthesis.onvoiceschanged = () => {
         window.speechSynthesis.onvoiceschanged = null
-        speakText(window.speechSynthesis.getVoices())
+        speak(window.speechSynthesis.getVoices())
       }
       window.speechSynthesis.getVoices()
     }
