@@ -113,79 +113,77 @@ function MessageActions({ content }) {
       return
     }
 
-    const doSpeak = (voices) => {
+    // Split text into small chunks (~150 chars) at sentence boundaries
+    // This fixes Chrome/mobile bug where long utterances cut off
+    function chunkText(text) {
+      const sentences = text.match(/[^.!?]+[.!?]*/g) || [text]
+      const chunks = []
+      let current = ''
+      for (const s of sentences) {
+        if ((current + s).length > 150) {
+          if (current.trim()) chunks.push(current.trim())
+          current = s
+        } else {
+          current += s
+        }
+      }
+      if (current.trim()) chunks.push(current.trim())
+      return chunks.length > 0 ? chunks : [text]
+    }
+
+    const speakChunks = (voices) => {
       window.speechSynthesis.cancel()
-
       const locale = detectLang(plainText)
-      const utterance = new SpeechSynthesisUtterance(plainText)
-      utterance.lang = locale
-      utterance.rate = 0.9
-      utterance.pitch = 1
-      utterance.volume = 1
-
-      // Build a priority list of voice candidates for the detected locale
-      const langPrefix = locale.split('-')[0] // e.g. 'hi' from 'hi-IN'
-
+      const langPrefix = locale.split('-')[0]
       const voice =
-        // 1. Exact locale match (e.g. hi-IN)
         voices.find((v) => v.lang === locale) ||
-        // 2. Same language, any region (e.g. hi-IN, hi-IN-x-*)
         voices.find((v) => v.lang.startsWith(langPrefix + '-')) ||
-        // 3. Bare language code
         voices.find((v) => v.lang === langPrefix) ||
-        // 4. Google/Microsoft named voices for the language (common in Chrome)
         voices.find((v) => v.name.toLowerCase().includes(langPrefix)) ||
         null
 
-      // Only assign a voice if we found one — otherwise let the browser
-      // use its built-in engine for the lang tag (better than forcing English)
-      if (voice) utterance.voice = voice
-
-      utterance.onstart = () => setIsSpeaking(true)
-
-      // Chrome bug fix: keep speech alive with a periodic resume
-      const resumeTimer = setInterval(() => {
-        if (window.speechSynthesis.speaking) {
-          window.speechSynthesis.pause()
-          window.speechSynthesis.resume()
-        } else {
-          clearInterval(resumeTimer)
-        }
-      }, 10000)
-
-      utterance.onend = () => {
-        clearInterval(resumeTimer)
-        setIsSpeaking(false)
-      }
-      utterance.onerror = (e) => {
-        // 'not-allowed' or 'language-unavailable' — try again without a specific voice
-        if (e.error === 'language-unavailable' || e.error === 'voice-unavailable') {
-          window.speechSynthesis.cancel()
-          const fallback = new SpeechSynthesisUtterance(plainText)
-          fallback.lang = locale
-          fallback.rate = 0.9
-          fallback.onend = () => setIsSpeaking(false)
-          fallback.onerror = () => setIsSpeaking(false)
-          window.speechSynthesis.speak(fallback)
-        } else {
-          clearInterval(resumeTimer)
-          setIsSpeaking(false)
-        }
-      }
-
+      const chunks = chunkText(plainText)
+      let index = 0
       setIsSpeaking(true)
-      window.speechSynthesis.speak(utterance)
+
+      function speakNext() {
+        if (index >= chunks.length) {
+          setIsSpeaking(false)
+          return
+        }
+        const utterance = new SpeechSynthesisUtterance(chunks[index])
+        utterance.lang = locale
+        utterance.rate = 0.95
+        utterance.pitch = 1
+        utterance.volume = 1
+        if (voice) utterance.voice = voice
+
+        utterance.onend = () => {
+          index++
+          speakNext()
+        }
+        utterance.onerror = (e) => {
+          if (e.error === 'interrupted') {
+            // user stopped — do nothing
+          } else {
+            index++
+            speakNext()
+          }
+        }
+        window.speechSynthesis.speak(utterance)
+      }
+
+      speakNext()
     }
 
     const voices = window.speechSynthesis.getVoices()
     if (voices.length > 0) {
-      doSpeak(voices)
+      speakChunks(voices)
     } else {
       window.speechSynthesis.onvoiceschanged = () => {
         window.speechSynthesis.onvoiceschanged = null
-        doSpeak(window.speechSynthesis.getVoices())
+        speakChunks(window.speechSynthesis.getVoices())
       }
-      // Trigger voice load
       window.speechSynthesis.getVoices()
     }
   }, [isSpeaking, plainText])
