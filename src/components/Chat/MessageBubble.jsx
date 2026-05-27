@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { User, Volume2, VolumeX, Copy, Check } from 'lucide-react'
 
 function formatTime(timestamp) {
@@ -7,60 +7,13 @@ function formatTime(timestamp) {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
-function stripMarkdown(content) {
-  if (!content) return ''
-  return content
-    .replace(/```[\s\S]*?```/g, (match) =>
-      match.replace(/```\w*\n?/g, '').replace(/```/g, '')
-    )
-    .replace(/`([^`]+)`/g, '$1')
-    .replace(/\*\*(.+?)\*\*/g, '$1')
-    .replace(/\*(.+?)\*/g, '$1')
-    .replace(/__(.+?)__/g, '$1')
-    .replace(/_(.+?)_/g, '$1')
-    .replace(/^#{1,6}\s+/gm, '')
-    .replace(/^>\s+/gm, '')
-    .replace(/^[\*\-\+]\s+/gm, '• ')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim()
-}
-
 function renderPlainAnswer(content) {
-  const cleaned = stripMarkdown(content)
-  if (!cleaned) return null
-
-  const paragraphs = cleaned.split(/\n\n+/)
+  if (!content) return null
   return (
     <div className="space-y-2">
-      {paragraphs.map((para, i) => {
-        const lines = para.split('\n')
-        const isList = lines.every((l) => l.startsWith('• '))
-        if (isList) {
-          return (
-            <ul key={i} className="space-y-1 pl-1">
-              {lines.map((line, j) => (
-                <li key={j} className="flex gap-2 leading-relaxed">
-                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-400 dark:bg-blue-500 flex-shrink-0" />
-                  <span>{line.replace(/^• /, '')}</span>
-                </li>
-              ))}
-            </ul>
-          )
-        }
-        return (
-          <p key={i} className="leading-relaxed">
-            {lines.map((line, j) => (
-              <React.Fragment key={j}>
-                {line.startsWith('• ')
-                  ? <span className="flex gap-2 mt-1"><span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-400 dark:bg-blue-500 flex-shrink-0" /><span>{line.replace(/^• /, '')}</span></span>
-                  : line
-                }
-                {j < lines.length - 1 && !line.startsWith('• ') && <br />}
-              </React.Fragment>
-            ))}
-          </p>
-        )
-      })}
+      {content.split(/\n\n+/).map((para, i) => (
+        <p key={i} className="leading-relaxed whitespace-pre-wrap">{para}</p>
+      ))}
     </div>
   )
 }
@@ -99,7 +52,7 @@ function detectLang(text) {
 function MessageActions({ content }) {
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [copied, setCopied] = useState(false)
-  const plainText = stripMarkdown(content)
+  const plainText = content || ''
 
   const toggleSpeaking = useCallback(() => {
     if (isSpeaking) {
