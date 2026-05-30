@@ -96,8 +96,6 @@ function MessageActions({ content }) {
 
       const chunks = splitIntoChunks(plainText)
 
-      // Queue ALL utterances at once during the user gesture — this is the key
-      // mobile fix: all speak() calls happen synchronously in the same tap handler
       chunks.forEach((chunk, i) => {
         const utt = new SpeechSynthesisUtterance(chunk)
         utt.lang = locale
@@ -117,16 +115,28 @@ function MessageActions({ content }) {
       setIsSpeaking(true)
     }
 
-    const voices = window.speechSynthesis.getVoices()
-    if (voices.length > 0) {
-      speak(voices)
-    } else {
-      window.speechSynthesis.onvoiceschanged = () => {
-        window.speechSynthesis.onvoiceschanged = null
-        speak(window.speechSynthesis.getVoices())
+    // getVoices() is async on most browsers — try immediately, then wait
+    const trySpeak = () => {
+      const voices = window.speechSynthesis.getVoices()
+      if (voices.length > 0) {
+        speak(voices)
+        return
       }
-      window.speechSynthesis.getVoices()
+      // Fallback: poll up to 10 times every 100ms (works on mobile Chrome/Safari)
+      let attempts = 0
+      const interval = setInterval(() => {
+        const v = window.speechSynthesis.getVoices()
+        if (v.length > 0 || attempts >= 10) {
+          clearInterval(interval)
+          speak(v)
+        }
+        attempts++
+      }, 100)
     }
+
+    // Trigger voice load (required on some browsers before getVoices() returns anything)
+    window.speechSynthesis.getVoices()
+    trySpeak()
   }, [isSpeaking, plainText])
 
   const handleCopy = useCallback(() => {
