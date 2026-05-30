@@ -57,12 +57,32 @@ function detectLanguageInstruction(messages) {
   // Thai
   if (/[\u0E00-\u0E7F]/.test(text)) return 'IMPORTANT: Reply ONLY in Thai.'
 
+  // Explicit language switch requests (e.g. "tell in tamil", "reply in hindi")
+  const langSwitch = [
+    { pattern: /\b(in tamil|tamil(la|le|il)?|tamil[ -]?la)\b/i,       reply: 'IMPORTANT: Reply ONLY in Tamil script.' },
+    { pattern: /\b(in hindi|hindi(me|mein)?)\b/i,                      reply: 'IMPORTANT: Reply ONLY in Hindi.' },
+    { pattern: /\b(in telugu|telugu(lo)?)\b/i,                         reply: 'IMPORTANT: Reply ONLY in Telugu.' },
+    { pattern: /\b(in kannada|kannada(alli)?)\b/i,                     reply: 'IMPORTANT: Reply ONLY in Kannada.' },
+    { pattern: /\b(in malayalam|malayalam(il)?)\b/i,                   reply: 'IMPORTANT: Reply ONLY in Malayalam.' },
+    { pattern: /\b(in bengali|bengali(te)?)\b/i,                       reply: 'IMPORTANT: Reply ONLY in Bengali.' },
+    { pattern: /\b(in arabic|arabic(mein)?)\b/i,                       reply: 'IMPORTANT: Reply ONLY in Arabic.' },
+    { pattern: /\b(in chinese|chinese(mein)?)\b/i,                     reply: 'IMPORTANT: Reply ONLY in Chinese.' },
+    { pattern: /\b(in japanese|japanese(mein)?)\b/i,                   reply: 'IMPORTANT: Reply ONLY in Japanese.' },
+    { pattern: /\b(in korean|korean(mein)?)\b/i,                       reply: 'IMPORTANT: Reply ONLY in Korean.' },
+    { pattern: /\b(in russian|russian(mein)?)\b/i,                     reply: 'IMPORTANT: Reply ONLY in Russian.' },
+    { pattern: /\b(in tanglish|tanglish)\b/i,                          reply: 'IMPORTANT: Reply ONLY in Tanglish (Tamil words written in English letters mixed with English). Use casual Chennai friend style with words like da, di, bro, aiyo, seri, konjam, romba etc.' },
+    { pattern: /\b(in english|english(la|le|il|mein)?)\b/i,            reply: 'IMPORTANT: Reply ONLY in English.' },
+  ]
+  for (const { pattern, reply } of langSwitch) {
+    if (pattern.test(text)) return reply
+  }
+
   // Tanglish detection — Tamil words written in English letters
   const tanglishWords = /\b(da|di|bro|machi|enna|sollu|paaru|seri|konjam|romba|nalla|theriyum|illa|aama|aiyo|yov|machaa|dei|adhu|ipo|paakalam|iruku|irukku|valikudhu|sapitiya|thanni|thoongo|kastam|achu|paathiya|therla|oho|yenna|epdi|evlo|neram|kudika)\b/i
   if (tanglishWords.test(text)) return 'IMPORTANT: Reply ONLY in Tanglish (Tamil words written in English letters mixed with English). Use casual Chennai friend style with words like da, di, bro, aiyo, seri, konjam, romba etc.'
 
   // Default: English
-  return 'IMPORTANT: Reply ONLY in English. Do NOT use any Tamil words or Tanglish.'
+  return 'IMPORTANT: Reply ONLY in English.'
 }
 
 export async function sendMessage(messages) {
