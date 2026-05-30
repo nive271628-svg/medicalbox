@@ -1,32 +1,12 @@
 import { useState } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter } from 'react-router-dom'
 import { ThemeProvider } from './context/ThemeContext'
-import { AuthProvider, useAuth } from './context/AuthContext'
 import Navbar from './components/Layout/Navbar'
 import ChatSidebar from './components/Chat/ChatSidebar'
 import ChatWindow from './components/Chat/ChatWindow'
-import Login from './components/Auth/Login'
-import Signup from './components/Auth/Signup'
 import { useChat } from './hooks/useChat'
 
-// Redirect to /login if not authenticated
-function PrivateRoute({ children }) {
-  const { currentUser, loading } = useAuth()
-  if (loading) return null
-  return currentUser ? children : <Navigate to="/login" replace />
-}
-
-// Redirect to /chat if already logged in
-function PublicRoute({ children }) {
-  const { currentUser, loading } = useAuth()
-  if (loading) return null
-  return !currentUser ? children : <Navigate to="/chat" replace />
-}
-
 function ChatPage() {
-  const { currentUser } = useAuth()
-  const uid = currentUser?.uid ?? null
-
   const {
     sessions,
     activeSessionId,
@@ -38,7 +18,7 @@ function ChatPage() {
     deleteSession,
     sendMessage,
     setError,
-  } = useChat(uid)
+  } = useChat(null)
 
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -80,15 +60,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <ThemeProvider>
-        <AuthProvider>
-            <Routes>
-              <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-              <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
-              <Route path="/chat" element={<PrivateRoute><ChatPage /></PrivateRoute>} />
-              <Route path="/" element={<Navigate to="/chat" replace />} />
-              <Route path="*" element={<Navigate to="/chat" replace />} />
-            </Routes>
-        </AuthProvider>
+        <ChatPage />
       </ThemeProvider>
     </BrowserRouter>
   )
